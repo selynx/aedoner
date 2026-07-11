@@ -3,18 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Portfólióm</title>
+    <title>aedoner // a lélek portfóliója</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
-        .card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-        h1 { color: #333; }
-        p { color: #666; }
+        :root {
+            --bg-color: #0a0a0c;
+            --card-bg: rgba(20, 20, 25, 0.6);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent: #a78bfa; /* Lágy misztikus lila */
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Finom háttérfények az eleganciáért */
+        .glow {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.05) 0%, rgba(0,0,0,0) 70%);
+            top: 10%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            padding: 40px 20px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: 0.3rem;
+            margin-bottom: 5px;
+            text-transform: lowercase;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-style: italic;
+            letter-spacing: 0.05rem;
+            margin-bottom: 40px;
+        }
+
+        /* Galéria/Kategória rács */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(167, 139, 250, 0.05);
+        }
+
+        .card h3 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin: 0 0 8px 0;
+            letter-spacing: 0.1rem;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Fun Faktor szekció */
+        .fun-zone {
+            margin-top: 60px;
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+        }
+
+        .soul-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            letter-spacing: 0.05rem;
+        }
+
+        .soul-btn:hover {
+            background: var(--accent);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
+        }
+
+        .soul-status {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 15px;
+            height: 20px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Szia! Ez a leendő weboldalam helye. 👋</h1>
-        <p>Jelenleg GitHub + Cloudflare Pages alapon fut, de hamarosan költözik a hazai NAS-ra!</p>
+
+    <div class="glow"></div>
+
+    <div class="container">
+        <header>
+            <h1>aedoner</h1>
+            <p>egy emberi lélek digitális lenyomata</p>
+        </header>
+
+        <div class="grid">
+            <a href="#" class="card">
+                <h3>Vizuális</h3>
+                <p>Rajzok, festmények & fényképek</p>
+            </a>
+            <a href="#" class="card">
+                <h3>Akusztikus</h3>
+                <p>Zenék, hangfoszlányok & dallamok</p>
+            </a>
+            <a href="#" class="card">
+                <h3>Gondolatok</h3>
+                <p>Versek & publicisztikák</p>
+            </a>
+        </div>
+
+        <div class="fun-zone">
+            <button class="soul-btn" onclick="tuneSoul()">Lélek-állapot lekérése</button>
+            <div class="soul-status" id="status-text">Kattints a szinkronizációhoz...</div>
+        </div>
     </div>
+
+    <script>
+        const statuses = [
+            "Jelenleg alkotói fázisban. A csend beszédes.",
+            "Káoszból rendet teremteni. Folyamatban...",
+            "A frekvenciák stabilak. A kreativitás szintje: 87%.",
+            "Éjszakai üzemmód. A csillagok fénye inspirál.",
+            "Melankolikus dallamok szólnak a háttérben.",
+            "A rendszer éber. Az elme szabad."
+        ];
+
+        function tuneSoul() {
+            const textElement = document.getElementById('status-text');
+            textElement.style.opacity = 0;
+            setTimeout(() => {
+                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                textElement.innerText = randomStatus;
+                textElement.style.opacity = 1;
+            }, 200);
+        }
+    </script>
 </body>
 </html>
