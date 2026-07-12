@@ -1,298 +1,53 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Aedoner.hu</title>
-
-<style>
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-:root{
-    --bg:#171717;
-    --panel:#202020;
-    --line:#F2F2F2;
-    --accent:#D2AE67;
-    --blue:#8CB7F6;
-    --text:#F2F2F2;
-    --muted:#AAAAAA;
-}
-
-body{
-    height:100vh;
-    overflow:hidden;
-    background:var(--bg);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-family:Consolas, Monaco, monospace;
-    position:relative;
-}
-
-/* Háttér */
-
-body::before{
-    content:"";
-    position:absolute;
-    inset:0;
-
-    background:
-
-    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px),
-
-    linear-gradient(135deg,
-    transparent 49.7%,
-    rgba(255,255,255,.02) 50%,
-    transparent 50.3%);
-
-    background-size:
-    90px 90px,
-    90px 90px,
-    180px 180px;
-}
-
-/* Arany háttérlap */
-
-.back{
-    position:absolute;
-
-    width:520px;
-    height:260px;
-
-    background:var(--accent);
-
-    transform:
-        translate(18px,18px);
-
-    clip-path:polygon(
-        9% 0,
-        100% 0,
-        100% 85%,
-        91% 100%,
-        0 100%,
-        0 15%
-    );
-}
-
-/* Panel */
-
-.card{
-
-    width:520px;
-    height:260px;
-
-    background:var(--panel);
-
-    border:3px solid var(--line);
-
-    position:relative;
-
-    clip-path:polygon(
-        9% 0,
-        100% 0,
-        100% 85%,
-        91% 100%,
-        0 100%,
-        0 15%
-    );
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-}
-
-/* geometrikus sarokelem */
-
-.corner{
-
-    position:absolute;
-
-    top:20px;
-    left:22px;
-
-    width:55px;
-    height:4px;
-
-    background:var(--blue);
-
-}
-
-.corner::after{
-
-    content:"";
-
-    position:absolute;
-
-    left:42px;
-    top:-9px;
-
-    width:4px;
-    height:22px;
-
-    background:var(--blue);
-
-    transform:rotate(25deg);
-
-}
-
-.content{
-
-    width:82%;
-    text-align:center;
-
-}
-
-h1{
-
-    color:var(--text);
-
-    font-size:2rem;
-
-    letter-spacing:4px;
-
-    margin-bottom:28px;
-
-    font-weight:bold;
-
-}
-
-p{
-
-    color:var(--muted);
-
-    line-height:1.9;
-
-    font-size:15px;
-
-    letter-spacing:1px;
-
-}
-
-/* díszvonal */
-
-.line{
-
-    width:80px;
-    height:2px;
-    background:var(--accent);
-
-    margin:0 auto 24px auto;
-
-}
-
-/* jobb felső geometria */
-
-.shape{
-
-    position:absolute;
-
-    right:24px;
-    top:22px;
-
-    width:16px;
-    height:16px;
-
-    border:2px solid rgba(255,255,255,.4);
-
-    transform:rotate(45deg);
-
-}
-
-/* bal alsó dísz */
-
-.shape2{
-
-    position:absolute;
-
-    left:28px;
-    bottom:24px;
-
-    width:70px;
-    height:2px;
-
-    background:rgba(255,255,255,.15);
-
-}
-
-.shape2::after{
-
-    content:"";
-
-    position:absolute;
-
-    right:-6px;
-    top:-4px;
-
-    width:10px;
-    height:10px;
-
-    background:var(--accent);
-
-}
-
-@media(max-width:650px){
-
-.card,
-.back{
-
-    width:92vw;
-    height:240px;
-
-}
-
-h1{
-
-    font-size:1.5rem;
-
-}
-
-p{
-
-    font-size:13px;
-
-}
-
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aedoner // csend</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #1a1a1a; /* Teljes sötétség */
+            color: #edebe6;
+            font-family: 'Courier New', Courier, monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .maintenance-box {
+            border: 3px solid #edebe6;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 15px 15px 0px #e5b869; /* Okkersárga kubista árnyék */
+        }
+        h1 {
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            line-height: 1.5;
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="back"></div>
-
-<div class="card">
-
-    <div class="corner"></div>
-
-    <div class="shape"></div>
-
-    <div class="shape2"></div>
-
-    <div class="content">
-
-        <div class="line"></div>
-
-        <h1>AEDONER.HU</h1>
-
-        <p>
-            A STRUKTÚRA ÁTALAKÍTÁS ALATT.<br>
-            A SOROK ÉS A SZILÁNKOK HAMAROSAN<br>
-            ÖSSZEÁLLNAK.
-        </p>
-
+    <div class="maintenance-box">
+        <h1>// aedoner.hu</h1>
+        <p>A struktúra átalakítás alatt. <br> A sorok és a szilánkok hamarosan összeállnak.</p>
     </div>
-
-</div>
 
 </body>
 </html>
