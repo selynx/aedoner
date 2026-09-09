@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aedoner // vizuál</title>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            background-color: #f1f0ec;
+            color: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.15s ease, filter 0.15s ease;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #app-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* GLITCH / MATRIX NÉZET STÍLUSA */
+        body.glitch-mode {
+            background-color: #050a05 !important;
+            color: #00ff66 !important;
+            filter: contrast(150%) hue-rotate(90deg);
+        }
+
+        body.glitch-mode .gallery-item {
+            border-color: #00ff66 !important;
+            background-color: #000 !important;
+            box-shadow: 6px 6px 0px #00ff66 !important;
+        }
+
+        body.glitch-mode .item-info, 
+        body.glitch-mode header, 
+        body.glitch-mode footer,
+        body.glitch-mode .filter-btn {
+            background-color: #000 !important;
+            color: #00ff66 !important;
+            border-color: #00ff66 !important;
+        }
+
+        /* ZAJSZŰRŐ */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 4px solid #1a1a1a;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .back-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            font-weight: 900;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 2px solid #1a1a1a;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background-color: #d96b52; 
+            color: #fff;
+            border-color: #d96b52;
+        }
+
+        /* MASONRY ELRENDEZÉS */
+        .gallery-grid {
+            column-count: 3;
+            column-gap: 25px;
+            width: 100%;
+            margin-bottom: 60px;
+            flex: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .gallery-grid { column-count: 2; }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            header { flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+            h1 { font-size: 2rem; }
+            .filters { gap: 10px; margin-bottom: 25px; }
+            .filter-btn { padding: 6px 12px; font-size: 0.75rem; border-width: 2px; }
+            .gallery-grid { column-count: 2; column-gap: 12px; }
+            .gallery-item { border-width: 2px; }
+            .item-info { padding: 8px; }
+            .item-title { font-size: 0.8rem; }
+            .item-tag { font-size: 0.6rem; }
+            footer { flex-direction: column; gap: 12px; text-align: center; }
+        }
+
+        .gallery-item {
+            break-inside: avoid;
+            margin-bottom: 25px;
+            border: 3px solid #1a1a1a;
+            background-color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transform: translateZ(0);
+            will-change: transform;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: grayscale(20%) contrast(120%);
+            transition: filter 0.2s ease;
+            pointer-events: none;
+        }
+
+        .gallery-item[data-category="digiphoto"] img {
+            filter: grayscale(0%) contrast(100%);
+        }
+
+        .item-info {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background-color: rgba(250, 250, 250, 0.95);
+            border-top: 2px solid #1a1a1a;
+            padding: 12px;
+            transform: translateY(100%);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .gallery-item:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 8px 8px 0px #d96b52;
+            z-index: 5;
+        }
+
+        .gallery-item:hover img {
+            filter: grayscale(0%) contrast(100%);
+        }
+
+        .gallery-item:hover .item-info {
+            transform: translateY(0);
+        }
+
+        .item-title {
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            word-wrap: break-word;
+        }
+
+        .item-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #666;
+            font-weight: bold;
+        }
+
+        /* NAGYÍTHATÓ POP-UP MODAL */
+        .image-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(241, 240, 236, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .image-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+        }
+
+        .modal-image-container {
+            width: 85vw;
+            height: 72vh;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .modal-image-container:active {
+            cursor: grabbing;
+        }
+
+        .modal-image-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: block;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            pointer-events: none;
+        }
+
+        .anti-download-shield {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+        }
+
+        .modal-title-display {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            border-bottom: 3px solid #1a1a1a;
+            padding-bottom: 5px;
+            background-color: transparent;
+        }
+
+        .close-modal-btn {
+            position: absolute;
+            top: 25px; right: 30px;
+            background-color: #d96b52;
+            color: #fff;
+            border: 3px solid #1a1a1a;
+            font-family: inherit;
+            font-weight: 900;
+            padding: 10px 18px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #1a1a1a;
+            font-size: 1rem;
+            z-index: 20;
+        }
+
+        /* LÁBLÉC ÉS LEJÁTSZÓ */
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-top: 2px solid #1a1a1a;
+            padding-top: 15px;
+            margin-top: auto;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .cassette-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 10px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .cassette-btn {
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .cassette-btn:hover {
+            color: #d96b52;
+        }
+    </style>
+</head>
+<body ondblclick="toggleGlitch()" oncontextmenu="return false;">
+
+    <div id="app-wrapper">
+        <header>
+            <a href="index.html" class="back-link">← [ vissza ]</a>
+            <h1>01 // Vizuál</h1>
+        </header>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterGallery('all', this)">Mind</button>
+            <button class="filter-btn" onclick="filterGallery('digital', this)">Digital Art</button>
+            <button class="filter-btn" onclick="filterGallery('photo', this)">Analóg Fotó</button>
+            <button class="filter-btn" onclick="filterGallery('digiphoto', this)">Digitális Fotó</button>
+        </div>
+
+        <div class="gallery-grid">
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/hippibagazs.png', 'Hippibagázs')">
+                <img src="Digitalart/hippibagazs.png" alt="hippibagazs" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Hippibagázs</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="photo" onclick="openPhoto('analgfotk/_MG_6891-positive.jpg', 'Virágok')">
+                <img src="analgfotk/_MG_6891-positive.jpg" alt="_MG_6891-positive" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Virágok</div><div class="item-tag">Analóg fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/20230411_163144.jpg', 'Kulissza')">
+                <img src="fotók/20230411_163144.jpg" alt="20230411_163144" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Kulissza</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/07908daa-ad82-4389-b349-3e4514410f45.png', 'Kerékpár')">
+                <img src="digitalart5/07908daa-ad82-4389-b349-3e4514410f45.png" alt="07908daa" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Kerékpár</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0055.jpg', 'Jónás 2')">
+                <img src="fotók/DSC_0055.jpg" alt="DSC_0055" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Jónás 2</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart3/mccartney1.png', 'McCartney 1')">
+                <img src="digitalart3/mccartney1.png" alt="mccartney1" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">McCartney 1</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/DSC_0330.jpg', 'Napsütéses lektor')">
+                <img src="fotók2/DSC_0330.jpg" alt="DSC_0330" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Napsütéses lektor</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="photo" onclick="openPhoto('analgfotk/_MG_6908-positive.jpg', 'Minden kertben citromfa')">
+                <img src="analgfotk/_MG_6908-positive.jpg" alt="_MG_6908-positive" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Minden kertben citromfa</div><div class="item-tag">Analóg fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart2/george2.png', 'George 2')">
+                <img src="digitalart2/george2.png" alt="george2" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">George 2</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/P1010794.jpg', 'Édenkert')">
+                <img src="fotók2/P1010794.jpg" alt="P1010794" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Édenkert</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/5959a3ee-1bb6-41cc-91cc-aa6aaacf420d.png', 'Mesél az erdő')">
+                <img src="digitalart5/5959a3ee-1bb6-41cc-91cc-aa6aaacf420d.png" alt="5959a3ee" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Mesél az erdő</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/berecz.png', 'Berecz')">
+                <img src="Digitalart/berecz.png" alt="berecz" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Berecz</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0072.jpg', 'AirPods ad')">
+                <img src="fotók/DSC_0072.jpg" alt="DSC_0072" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">AirPods ad</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart4/mccartneysapkaban2.png', 'McCartney sapkában2')">
+                <img src="Digitalart4/mccartneysapkaban2.png" alt="mccartneysapkaban2" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">McCartney sapkában2</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="photo" onclick="openPhoto('analgfotk/_MG_6916-positive.jpg', 'Pálmafa')">
+                <img src="analgfotk/_MG_6916-positive.jpg" alt="_MG_6916-positive" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Pálmafa</div><div class="item-tag">Analóg fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/DSC_0423.jpg', 'TekerŐ')">
+                <img src="fotók2/DSC_0423.jpg" alt="DSC_0423" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">TekerŐ</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/6c2f0067-2ee5-4ef4-b496-3573b4a02951.png', 'Marlboro red')">
+                <img src="digitalart5/6c2f0067-2ee5-4ef4-b496-3573b4a02951.png" alt="6c2f0067" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Marlboro red</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0342.jpg', 'Where is my mind?')">
+                <img src="fotók/DSC_0342.jpg" alt="DSC_0342" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Where is my mind?</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/35ac0b9d-f2a3-4aa8-b09e-4f87e1cce96d.png', 'Petit Picasso')">
+                <img src="digitalart5/35ac0b9d-f2a3-4aa8-b09e-4f87e1cce96d.png" alt="35ac0b9d" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Petit Picasso</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/o1g.png', 'O1G')">
+                <img src="Digitalart/o1g.png" alt="o1g" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">O1G</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/jonas.jpg', 'Jónás')">
+                <img src="fotók/jonas.jpg" alt="jonas" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Jónás</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart2/ringo2.png', 'Ringo 2')">
+                <img src="digitalart2/ringo2.png" alt="ringo2" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Ringo 2</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart4/beatles1.png', 'Beatles 1')">
+                <img src="Digitalart4/beatles1.png" alt="beatles1" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Beatles 1</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0075.jpg', 'Torda')">
+                <img src="fotók/DSC_0075.jpg" alt="DSC_0075" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Torda</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="photo" onclick="openPhoto('analgfotk/_MG_6894-positive.jpg', '_MG_6894')">
+                <img src="analgfotk/_MG_6894-positive.jpg" alt="_MG_6894-positive" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">_MG_6894</div><div class="item-tag">Analóg fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/artofjuci.png', 'Mind of Juci')">
+                <img src="Digitalart/artofjuci.png" alt="artofjuci" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Mind of Juci</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/DSC_0358.jpg', 'Elkövetett emberölelés')">
+                <img src="fotók2/DSC_0358.jpg" alt="DSC_0358" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Elkövetett emberölelés</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/1e6c8cfd-cc36-481b-88b6-b4d8263b3c75.png', 'Többedmaga')">
+                <img src="digitalart5/1e6c8cfd-cc36-481b-88b6-b4d8263b3c75.png" alt="1e6c8cfd" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Többedmaga</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/P1010813.jpg', 'Fényhúr')">
+                <img src="fotók2/P1010813.jpg" alt="P1010813" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Fényhúr</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="photo" onclick="openPhoto('analgfotk/_MG_6911-positive.jpg', 'Cagliari')">
+                <img src="analgfotk/_MG_6911-positive.jpg" alt="_MG_6911-positive" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Cagliari</div><div class="item-tag">Analóg fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart2/lennon2.png', 'Lennon 2')">
+                <img src="digitalart2/lennon2.png" alt="lennon2" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Lennon 2</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0352(1).jpg', 'Zenetörténész')">
+                <img src="fotók/DSC_0352(1).jpg" alt="DSC_0352(1)" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Zenetörténész</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/IMG_20210329_212209_922.jpg', 'Szakriális tábortűz')">
+                <img src="digitalart5/IMG_20210329_212209_922.jpg" alt="IMG_20210329" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Szakriális tábortűz</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart2/mccartney2.png', 'McCartney 2')">
+                <img src="digitalart2/mccartney2.png" alt="mccartney2" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">McCartney 2</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0211.jpg', 'St. Steve road')">
+                <img src="fotók/DSC_0211.jpg" alt="DSC_0211" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">St. Steve road</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart3/george1.png', 'George 1')">
+                <img src="digitalart3/george1.png" alt="george1" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">George 1</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/DSC_0342.jpg', 'Off the wall')">
+                <img src="fotók2/DSC_0342.jpg" alt="DSC_0342" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Off the wall</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/95cdb53e-f6d7-45f1-ac6e-63c478ceda09.png', 'Rolling Picassos')">
+                <img src="digitalart5/95cdb53e-f6d7-45f1-ac6e-63c478ceda09.png" alt="95cdb53e" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Rolling Picassos</div><div class="item-tag">Digital Art</div></div>
+            </div>    
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/presserpici.png', 'Presser Pici')">
+                <img src="Digitalart/presserpici.png" alt="presserpici" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Presser Pici</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0419.jpg', 'Zenegyűrű')">
+                <img src="fotók/DSC_0419.jpg" alt="DSC_0419" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Zenegyűrű</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/IMG_20210312_142538_868.jpg', 'József Attila')">
+                <img src="digitalart5/IMG_20210312_142538_868.jpg" alt="IMG_20210312" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">József Attila</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/P1010815.jpg', 'Sunny')">
+                <img src="fotók2/P1010815.jpg" alt="P1010815" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Sunny</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart3/ringo1.png', 'Ringo 1')">
+                <img src="digitalart3/ringo1.png" alt="ringo1" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Ringo 1</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/P1010839.jpg', 'The End')">
+                <img src="fotók2/P1010839.jpg" alt="The End" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">The End</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart/jegesmedve.png', 'Jegesmedve')">
+                <img src="Digitalart/jegesmedve.png" alt="jegesmedve" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Jegesmedve</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0339.jpg', 'Pszichó')">
+                <img src="fotók/DSC_0339.jpg" alt="DSC_0339" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Pszichó</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('Digitalart4/mccartneysapkaban.png', 'McCartney Sapkában')">
+                <img src="Digitalart4/mccartneysapkaban.png" alt="mccartneysapkaban" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">McCartney Sapkában</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digital" onclick="openPhoto('digitalart5/62009a90-cf72-42d3-ac03-cf012bf34639.png', 'Sovjet pub')">
+                <img src="digitalart5/62009a90-cf72-42d3-ac03-cf012bf34639.png" alt="62009a90" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Sovjet pub</div><div class="item-tag">Digital Art</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/DSC_0386.jpg', 'Sziluett')">
+                <img src="fotók2/DSC_0386.jpg" alt="Sziluett" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Sziluett</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók/DSC_0216.jpg', 'Latyak')">
+                <img src="fotók/DSC_0216.jpg" alt="Latyak" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Latyak</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+            <div class="gallery-item" data-category="digiphoto" onclick="openPhoto('fotók2/P1010819 másolata.jpg', 'Éget a nap')">
+                <img src="fotók2/P1010819 másolata.jpg" alt="P1010819 másolata" loading="lazy" decoding="async">
+                <div class="item-info"><div class="item-title">Éget a nap</div><div class="item-tag">Digitális Fotó</div></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- NAGYÍTHATÓ POP-UP MODAL -->
+    <div class="image-modal" id="photoModal">
+        <button class="close-modal-btn" onclick="closePhoto()">X [ BEZÁR ]</button>
+        <div class="modal-content-wrapper">
+            <div class="modal-image-container" id="modalImgContainer">
+                <div class="anti-download-shield" oncontextmenu="return false;"></div>
+                <img src="" id="modalImg" alt="Fókusz kép">
+            </div>
+            <div class="modal-title-display" id="modalTitle"></div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-left" id="footer-left-text">
+            //Színek és formák!
+        </div>
+        
+        <div class="cassette-player">
+            <button class="cassette-btn" id="playBtn" onclick="toggleAudio()">[ ▶ PLAY ]</button>
+            <span id="trackName" style="font-size:0.7rem;">[ Random song ]</span>
+            <audio id="audioEngine" loop></audio>
+        </div>
+
+        <div class="footer-right" id="timer">Jelenlét: 0 másodperc</div>
+    </footer>
+
+    <script>
+        /* FOLYAMATOS JELENLÉT MÉRŐ */
+        let seconds = sessionStorage.getItem('aedoner_presence');
+        if (seconds === null) {
+            seconds = 0;
+        } else {
+            seconds = parseInt(seconds, 10);
+        }
+
+        setInterval(() => {
+            seconds++;
+            sessionStorage.setItem('aedoner_presence', seconds);
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
+            }
+        }, 1000);
+
+        document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
+
+        function filterGallery(category, button) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            document.querySelectorAll('.gallery-item').forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        const photoModal = document.getElementById('photoModal');
+        const modalImg = document.getElementById('modalImg');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContainer = document.getElementById('modalImgContainer');
+
+        let scale = 1;
+        let posX = 0;
+        let posY = 0;
+        let isDragging = false;
+        let startX, startY;
+
+        function openPhoto(src, title) {
+            modalImg.src = src;
+            modalTitle.innerText = title;
+            scale = 1;
+            posX = 0;
+            posY = 0;
+            updateTransform();
+            photoModal.classList.add('active');
+        }
+
+        function closePhoto() {
+            photoModal.classList.remove('active');
+        }
+
+        function updateTransform() {
+            modalImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        }
+
+        modalContainer.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const zoomIntensity = 0.1;
+            if (e.deltaY < 0) {
+                scale += zoomIntensity;
+            } else {
+                scale -= zoomIntensity;
+                if (scale < 1) scale = 1;
+            }
+            if (scale === 1) { posX = 0; posY = 0; }
+            updateTransform();
+        });
+
+        modalContainer.addEventListener('mousedown', function(e) {
+            if (scale > 1) {
+                isDragging = true;
+                startX = e.clientX - posX;
+                startY = e.clientY - posY;
+            }
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            posX = e.clientX - startX;
+            posY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+
+        photoModal.addEventListener('click', function(e) {
+            if (e.target === photoModal) {
+                closePhoto();
+            }
+        });
+
+        /* KAZETTÁS MAGNÓ RANDOM ENGINE */
+        const audio = document.getElementById('audioEngine');
+        const playBtn = document.getElementById('playBtn');
+        const trackNameEl = document.getElementById('trackName');
+
+        const playlist = [
+            { title: "hegyek.mp3", src: "Dallamok/hegyek.mp3" },
+            { title: "A_babam_fekete_romalany.wav", src: "Dallamok/A_babam_fekete_romalany.wav" },
+            { title: "littlepaul.wav", src: "Dallamok/littlepaul.wav" },
+            { title: "makaralexneknagya.wav", src: "Dallamok/makaralexneknagya.wav" }
+        ];
+
+        function toggleAudio() {
+            if (audio.paused) {
+                if (!audio.src || audio.src === "" || audio.ended) {
+                    const randomIndex = Math.floor(Math.random() * playlist.length);
+                    const randomTrack = playlist[randomIndex];
+                    audio.src = randomTrack.src;
+                    if (trackNameEl) trackNameEl.innerText = randomTrack.title;
+                }
+                
+                audio.play();
+                playBtn.innerText = '[ ❚❚ PAUSE ]';
+            } else {
+                audio.pause();
+                playBtn.innerText = '[ ▶ PLAY ]';
+            }
+        }
+
+        function toggleGlitch() {
+            document.body.classList.toggle('glitch-mode');
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleGlitch();
+            }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) {
+                e.preventDefault();
+            }
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText("");
+            }
+        });
+    </script>
+</body>
+</html>

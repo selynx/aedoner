@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aedoner // Dallamsorok</title>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            background-color: #f1f0ec;
+            color: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background-color 0.15s ease, filter 0.15s ease;
+        }
+
+        #app-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        /* GLITCH / MATRIX NÉZET STÍLUSA */
+        body.glitch-mode {
+            background-color: #050a05 !important;
+            color: #00ff66 !important;
+            filter: contrast(150%) hue-rotate(90deg);
+        }
+
+        body.glitch-mode .track-card,
+        body.glitch-mode header, 
+        body.glitch-mode footer,
+        body.glitch-mode .custom-player-btn,
+        body.glitch-mode .progress-bar {
+            background-color: #000 !important;
+            color: #00ff66 !important;
+            border-color: #00ff66 !important;
+        }
+
+        body.glitch-mode .progress-fill {
+            background-color: #00ff66 !important;
+        }
+
+        body.glitch-mode .track-meta,
+        body.glitch-mode .track-desc,
+        body.glitch-mode .time-display {
+            color: #00ff66 !important;
+        }
+
+        body.glitch-mode .card-blue,
+        body.glitch-mode .card-yellow,
+        body.glitch-mode .card-red {
+            box-shadow: 12px 12px 0px #00ff66 !important;
+        }
+
+        body.glitch-mode .card-blue:hover,
+        body.glitch-mode .card-yellow:hover,
+        body.glitch-mode .card-red:hover {
+            box-shadow: 18px 18px 0px #00ff66 !important;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 4px solid #1a1a1a;
+            padding-bottom: 20px;
+            margin-bottom: 60px;
+        }
+
+        .back-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            font-weight: 900;
+        }
+
+        .audio-container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto 60px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* KUBISTA TRACK KÁRTYA STÍLUSOK */
+        .track-card {
+            background-color: #fff;
+            border: 3px solid #1a1a1a;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            position: relative;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s;
+        }
+
+        @media (min-width: 768px) {
+            .track-card {
+                grid-template-columns: 2fr 3fr;
+                align-items: center;
+            }
+        }
+
+        .card-blue {
+            box-shadow: 12px 12px 0px #4a6b82;
+        }
+        .card-blue:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 18px 18px 0px #4a6b82;
+        }
+
+        .card-yellow {
+            box-shadow: -12px 12px 0px #e5b869;
+        }
+        .card-yellow:hover {
+            transform: translate(4px, -4px);
+            box-shadow: -18px 18px 0px #e5b869;
+        }
+
+        .card-red {
+            box-shadow: 12px -12px 0px #d96b52;
+        }
+        .card-red:hover {
+            transform: translate(-4px, 4px);
+            box-shadow: 18px -18px 0px #d96b52;
+        }
+
+        .track-card::before {
+            content: "";
+            position: absolute;
+            top: 0; right: 0;
+            width: 0; height: 0;
+            border-style: solid;
+            border-width: 0 20px 20px 0;
+            border-color: transparent #1a1a1a transparent transparent;
+        }
+
+        .track-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .track-meta {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .track-title {
+            font-size: 1.7rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        .track-desc {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: #444;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        /* EGYEDI KUBISTA AUDIO LEJÁTSZÓ STÍLUSOK */
+        .player-zone {
+            width: 100%;
+        }
+
+        .custom-player {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: #f1f0ec;
+            border: 2px solid #1a1a1a;
+            padding: 10px 15px;
+            box-shadow: 4px 4px 0px #1a1a1a;
+        }
+
+        .custom-player-btn {
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            font-family: inherit;
+            font-weight: 900;
+            font-size: 0.85rem;
+            padding: 8px 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: background-color 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+
+        .custom-player-btn:hover {
+            background: #d96b52;
+            color: #fff;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 14px;
+            background: #fff;
+            border: 2px solid #1a1a1a;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #1a1a1a;
+            transition: width 0.1s linear;
+        }
+
+        .card-blue .progress-fill { background: #4a6b82; }
+        .card-yellow .progress-fill { background: #e5b869; }
+        .card-red .progress-fill { background: #d96b52; }
+
+        .time-display {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-top: 2px solid #1a1a1a;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body ondblclick="toggleGlitch()">
+
+    <div id="app-wrapper">
+        <header>
+            <a href="index.html" class="back-link">← [ vissza ]</a>
+            <h1>02 // Dallamsorok</h1>
+        </header>
+
+        <div class="audio-container">
+            
+            <!-- Track 01 -->
+            <div class="track-card card-blue">
+                <div class="track-info">
+                    <span class="track-meta">Demó // 01</span>
+                    <h2 class="track-title">Hegyek demó</h2>
+                    <p class="track-desc">Miki!!&lt;3</p>
+                </div>
+                <div class="player-zone">
+                    <audio id="audio-1" src="Dallamok/hegyek.mp3"></audio>
+                    <div class="custom-player">
+                        <button class="custom-player-btn" onclick="togglePlay('audio-1', this)">[ ▶ PLAY ]</button>
+                        <div class="progress-bar" onclick="seekAudio('audio-1', event, this)">
+                            <div class="progress-fill" id="fill-audio-1"></div>
+                        </div>
+                        <span class="time-display" id="time-audio-1">0:00 / --:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track 02 -->
+            <div class="track-card card-yellow">
+                <div class="track-info">
+                    <span class="track-meta">Demó // 02</span>
+                    <h2 class="track-title">A babám fekete romlány cover</h2>
+                    <p class="track-desc">Állatsimogató 1</p>
+                </div>
+                <div class="player-zone">
+                    <audio id="audio-2" src="Dallamok/A_babam_fekete_romalany.wav"></audio>
+                    <div class="custom-player">
+                        <button class="custom-player-btn" onclick="togglePlay('audio-2', this)">[ ▶ PLAY ]</button>
+                        <div class="progress-bar" onclick="seekAudio('audio-2', event, this)">
+                            <div class="progress-fill" id="fill-audio-2"></div>
+                        </div>
+                        <span class="time-display" id="time-audio-2">0:00 / --:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track 03 -->
+            <div class="track-card card-red">
+                <div class="track-info">
+                    <span class="track-meta">Demó // 03</span>
+                    <h2 class="track-title">Kispál részlet</h2>
+                    <p class="track-desc">Éljen Kispi!</p>
+                </div>
+                <div class="player-zone">
+                    <audio id="audio-3" src="Dallamok/littlepaul.wav"></audio>
+                    <div class="custom-player">
+                        <button class="custom-player-btn" onclick="togglePlay('audio-3', this)">[ ▶ PLAY ]</button>
+                        <div class="progress-bar" onclick="seekAudio('audio-3', event, this)">
+                            <div class="progress-fill" id="fill-audio-3"></div>
+                        </div>
+                        <span class="time-display" id="time-audio-3">0:00 / --:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track 04 -->
+            <div class="track-card card-blue">
+                <div class="track-info">
+                    <span class="track-meta">Demó // 04</span>
+                    <h2 class="track-title">Makár:)</h2>
+                    <p class="track-desc">Hogy tavasszal a Kosztolányin virágzanak a rasszisták</p>
+                </div>
+                <div class="player-zone">
+                    <audio id="audio-4" src="Dallamok/makaralexneknagya.wav"></audio>
+                    <div class="custom-player">
+                        <button class="custom-player-btn" onclick="togglePlay('audio-4', this)">[ ▶ PLAY ]</button>
+                        <div class="progress-bar" onclick="seekAudio('audio-4', event, this)">
+                            <div class="progress-fill" id="fill-audio-4"></div>
+                        </div>
+                        <span class="time-display" id="time-audio-4">0:00 / --:--</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-left" id="footer-left-text">
+            // Zene nélkül mit érek én?!
+        </div>
+        
+        <div class="cassette-player">
+            <button class="cassette-btn" id="playBtn" onclick="toggleAudio()">[ ▶ PLAY ]</button>
+            <span id="trackName" style="font-size:0.7rem;">[ Random song ]</span>
+        </div>
+
+        <div class="footer-right" id="timer">Jelenlét: 0 másodperc</div>
+    </footer>
+
+    <script>
+        /* EGYEDI KUBISTA LEJÁTSZÓ LOGIKA */
+        let currentlyPlaying = null;
+
+        function togglePlay(id, btn) {
+            const player = document.getElementById(id);
+
+            if (currentlyPlaying && currentlyPlaying !== player) {
+                currentlyPlaying.pause();
+                const activeBtn = currentlyPlaying.parentElement.querySelector('.custom-player-btn');
+                if (activeBtn) activeBtn.innerText = '[ ▶ PLAY ]';
+            }
+
+            if (player.paused) {
+                player.play();
+                btn.innerText = '[ ❚❚ PAUSE ]';
+                currentlyPlaying = player;
+            } else {
+                player.pause();
+                btn.innerText = '[ ▶ PLAY ]';
+                currentlyPlaying = null;
+            }
+        }
+
+        function formatTime(sec) {
+            if (isNaN(sec)) return "--:--";
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function seekAudio(id, e, bar) {
+            const player = document.getElementById(id);
+            if (!player.duration) return;
+            const rect = bar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = clickX / rect.width;
+            player.currentTime = percent * player.duration;
+        }
+
+        function initCustomAudioPlayers() {
+            document.querySelectorAll('.audio-container audio').forEach(audio => {
+                const id = audio.id;
+                const fill = document.getElementById(`fill-${id}`);
+                const timeDisplay = document.getElementById(`time-${id}`);
+
+                audio.addEventListener('timeupdate', () => {
+                    if (audio.duration && fill && timeDisplay) {
+                        const pct = (audio.currentTime / audio.duration) * 100;
+                        fill.style.width = pct + '%';
+                        timeDisplay.innerText = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+                    }
+                });
+
+                audio.addEventListener('loadedmetadata', () => {
+                    if (timeDisplay) timeDisplay.innerText = `0:00 / ${formatTime(audio.duration)}`;
+                });
+
+                audio.addEventListener('ended', () => {
+                    const btn = audio.parentElement.querySelector('.custom-player-btn');
+                    if (btn) btn.innerText = '[ ▶ PLAY ]';
+                    if (fill) fill.style.width = '0%';
+                });
+            });
+        }
+
+        initCustomAudioPlayers();
+
+        /* FOLYAMATOS JELENLÉT MÉRŐ */
+        let seconds = sessionStorage.getItem('aedoner_presence');
+        if (seconds === null) {
+            seconds = 0;
+        } else {
+            seconds = parseInt(seconds, 10);
+        }
+
+        setInterval(() => {
+            seconds++;
+            sessionStorage.setItem('aedoner_presence', seconds);
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
+            }
+        }, 1000);
+
+        document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
+
+        /* KAZETTÁS MAGNÓ RANDOM ENGINE */
+        const audio = document.getElementById('audioEngine') || document.createElement('audio');
+        if (!audio.id) { audio.id = 'audioEngine'; audio.loop = true; document.body.appendChild(audio); }
+
+        const playBtn = document.getElementById('playBtn');
+        const trackNameEl = document.getElementById('trackName');
+
+        const playlist = [
+            { title: "hegyek.mp3", src: "Dallamok/hegyek.mp3" },
+            { title: "A_babam_fekete_romalany.wav", src: "Dallamok/A_babam_fekete_romalany.wav" },
+            { title: "littlepaul.wav", src: "Dallamok/littlepaul.wav" },
+            { title: "makaralexneknagya.wav", src: "Dallamok/makaralexneknagya.wav" }
+        ];
+
+        function toggleAudio() {
+            if (audio.paused) {
+                if (!audio.src || audio.src === "" || audio.ended) {
+                    const randomIndex = Math.floor(Math.random() * playlist.length);
+                    const randomTrack = playlist[randomIndex];
+                    audio.src = randomTrack.src;
+                    if (trackNameEl) trackNameEl.innerText = randomTrack.title;
+                }
+                
+                audio.play();
+                playBtn.innerText = '[ ❚❚ PAUSE ]';
+            } else {
+                audio.pause();
+                playBtn.innerText = '[ ▶ PLAY ]';
+            }
+        }
+
+        function toggleGlitch() {
+            document.body.classList.toggle('glitch-mode');
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleGlitch();
+            }
+        });
+    </script>
+</body>
+</html>

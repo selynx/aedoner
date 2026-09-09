@@ -3,51 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aedoner // csend</title>
+    <title>Aedoner // Főoldal</title>
+    
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
         }
+
         body {
-            background-color: #1a1a1a; /* Teljes sötétség */
-            color: #edebe6;
+            background-color: #f1f0ec;
+            color: #1a1a1a;
             font-family: 'Courier New', Courier, monospace;
+            padding: 30px 40px;
             height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            text-align: center;
-            padding: 20px;
+            justify-content: space-between;
+            transition: background-color 0.15s ease, filter 0.15s ease;
+            overflow: hidden;
         }
-        .maintenance-box {
-            border: 3px solid #edebe6;
-            padding: 40px;
-            max-width: 500px;
-            box-shadow: 15px 15px 0px #e5b869; /* Okkersárga kubista árnyék */
+
+        /* GLITCH / MATRIX NÉZET STÍLUSA */
+        body.glitch-mode {
+            background-color: #050a05 !important;
+            color: #00ff66 !important;
+            filter: contrast(150%) hue-rotate(90deg);
         }
-        h1 {
+
+        body.glitch-mode .block {
+            border-color: #00ff66 !important;
+            background-color: #000 !important;
+            color: #00ff66 !important;
+        }
+
+        body.glitch-mode .collage-container {
+            border-color: #00ff66 !important;
+            background-color: #000 !important;
+            box-shadow: 20px 20px 0px rgba(0, 255, 102, 0.2) !important;
+        }
+
+        body.glitch-mode footer,
+        body.glitch-mode .cassette-player {
+            border-color: #00ff66 !important;
+            color: #00ff66 !important;
+            background-color: #000 !important;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            opacity: 0.04;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        #app-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .brand {
             font-size: 1.8rem;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: -1px;
-            margin-bottom: 15px;
+            letter-spacing: -2px;
+            margin-bottom: 25px;
+            z-index: 100;
+            text-align: center;
         }
-        p {
-            font-size: 0.9rem;
+
+        /* KÖZPONTI TÁROLÓ - PONTOSAN KÖZÉPEN */
+        .collage-container {
+            width: 85vw;
+            height: 58vh;
+            display: flex;
+            border: 4px solid #1a1a1a;
+            background-color: #1a1a1a;
+            gap: 5px;
+            box-shadow: 20px 20px 0px rgba(26, 26, 26, 0.08);
+            position: relative;
+            margin: auto 0;
+        }
+
+        .block {
+            flex: 1;
+            text-decoration: none;
+            color: #1a1a1a;
+            position: relative;
+            transition: flex 0.8s cubic-bezier(0.25, 1, 0.3, 1), background-color 0.5s;
+            cursor: pointer;
+            background-color: #fff;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .block-visual { background-color: #d96b52; }
+        .block-audio { background-color: #4a6b82; }
+        .block-lighters { background-color: #dca2a6; }
+
+        .collage-container .block:hover {
+            flex: 2.2;
+            color: #fff;
+            background-color: #111;
+        }
+
+        .block h2 { font-size: 2.4rem; text-transform: uppercase; font-weight: 900; letter-spacing: -2px; line-height: 1; margin-bottom: 20px; }
+        .block p { font-size: 0.75rem; text-transform: uppercase; font-weight: bold; opacity: 0.7; border-top: 1px solid rgba(26, 26, 26, 0.2); padding-top: 15px; }
+
+        /* LÁBLÉC ÉS LEJÁTSZÓ */
+        footer {
+            width: 85vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
             text-transform: uppercase;
-            opacity: 0.7;
-            letter-spacing: 1px;
-            line-height: 1.5;
+            font-weight: bold;
+            border-top: 2px solid #1a1a1a;
+            padding-top: 15px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .cassette-player {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 10px;
+            border: 1px solid #1a1a1a;
+        }
+
+        .cassette-btn {
+            background: transparent;
+            border: none;
+            font-family: inherit;
+            font-weight: 900;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .cassette-btn:hover {
+            color: #d96b52;
+        }
+
+        /* MOBILOS INTEGRÁCIÓ */
+        @media (max-width: 768px) {
+            body { overflow-y: auto; padding: 20px; height: auto; }
+            .collage-container { 
+                flex-direction: column; 
+                width: 100%; 
+                height: auto; 
+                border: none; 
+                box-shadow: none; 
+            }
+            .block { 
+                flex: none; 
+                height: 180px; 
+                width: 100%; 
+                border: 4px solid #1a1a1a; 
+                margin-bottom: 15px; 
+            }
+            .block h2 { font-size: 1.5rem; }
+            .brand { font-size: 1.5rem; margin-bottom: 20px; }
+            footer { width: 100%; flex-direction: column; text-align: center; gap: 10px; }
         }
     </style>
 </head>
-<body>
+<body ondblclick="toggleGlitch()">
 
-    <div class="maintenance-box">
-        <h1> Aedoner </h1>
-        <p>A struktúra átalakítás alatt. <br> A sorok és a szilánkok hamarosan összeállnak.</p>
+    <!-- FŐ TARTALMI CSOMÓPONT A ZÖKKENŐMENTES NÉZETVÁLTÁSHOZ -->
+    <div id="app-wrapper">
+        <div class="brand">aedoner</div>
+
+        <div class="collage-container">
+            <!-- 01 // VIZUÁL -->
+            <a href="vizual.html" class="block block-visual nav-link">
+                <div class="block-content">
+                    <h2>Vizuál</h2>
+                    <p>Sketchbook . Art . Fotó</p>
+                </div>
+            </a>
+
+            <!-- 02 // DALLAMSOROK -->
+            <a href="dallamok.html" class="block block-audio nav-link">
+                <div class="block-content">
+                    <h2>Dallamsorok</h2>
+                    <p>Akusztikus . Demó</p>
+                </div>
+            </a>
+
+            <!-- 03 // GYÚJTÓK -->
+            <a href="clipper.html" class="block block-lighters nav-link">
+                <div class="block-content">
+                    <h2>Gyújtók</h2>
+                    <p>Clipper . Zippo</p>
+                </div>
+            </a>
+        </div>
     </div>
 
+    <footer>
+        <div class="footer-left" id="footer-left-text">
+            //Jasper megy az idő.
+        </div>
+
+        <!-- STICKY KAZETTÁS LEJÁTSZÓ -->
+        <div class="cassette-player">
+            <button class="cassette-btn" id="playBtn" onclick="toggleAudio()">[ ▶ PLAY ]</button>
+            <span id="trackName" style="font-size:0.7rem;">[ Random song ]</span>
+            <audio id="audioEngine" loop></audio>
+        </div>
+
+        <div class="footer-right" id="timer">Jelenlét: 0 másodperc</div>
+    </footer>
+
+    <script>
+        /* FOLYAMATOS JELENLÉT MÉRŐ */
+        let seconds = sessionStorage.getItem('aedoner_presence');
+        if (seconds === null) {
+            seconds = 0;
+        } else {
+            seconds = parseInt(seconds, 10);
+        }
+
+        setInterval(() => {
+            seconds++;
+            sessionStorage.setItem('aedoner_presence', seconds);
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
+            }
+        }, 1000);
+
+        document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
+
+        /* KAZETTÁS MAGNÓ RANDOM ENGINE */
+        const audio = document.getElementById('audioEngine');
+        const playBtn = document.getElementById('playBtn');
+        const trackNameEl = document.getElementById('trackName');
+
+        const playlist = [
+            { title: "hegyek.mp3", src: "Dallamok/hegyek.mp3" },
+            { title: "A_babam_fekete_romalany.wav", src: "Dallamok/A_babam_fekete_romalany.wav" },
+            { title: "littlepaul.wav", src: "Dallamok/littlepaul.wav" },
+            { title: "makaralexneknagya.wav", src: "Dallamok/makaralexneknagya.wav" }
+        ];
+
+        function toggleAudio() {
+            if (audio.paused) {
+                if (!audio.src || audio.src === "" || audio.ended) {
+                    const randomIndex = Math.floor(Math.random() * playlist.length);
+                    const randomTrack = playlist[randomIndex];
+                    audio.src = randomTrack.src;
+                    if (trackNameEl) trackNameEl.innerText = randomTrack.title;
+                }
+                
+                audio.play();
+                playBtn.innerText = '[ ❚❚ PAUSE ]';
+            } else {
+                audio.pause();
+                playBtn.innerText = '[ ▶ PLAY ]';
+            }
+        }
+
+        /* AKADÁSMENTES NAVIGATION ENGINE */
+        function attachNavEvents() {
+            document.querySelectorAll('a.nav-link, a.back-link').forEach(link => {
+                link.onclick = function(e) {
+                    const targetUrl = this.getAttribute('href');
+                    if (targetUrl && targetUrl !== '#' && !targetUrl.startsWith('http')) {
+                        e.preventDefault();
+                        loadPage(targetUrl);
+                    }
+                };
+            });
+        }
+
+        function loadPage(url) {
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newWrapper = doc.querySelector('#app-wrapper') || doc.querySelector('.audio-container') || doc.querySelector('.gallery-grid') || doc.querySelector('.view-section');
+                    
+                    if (newWrapper) {
+                        const appWrapper = document.getElementById('app-wrapper');
+                        appWrapper.innerHTML = '';
+                        
+                        const newHeader = doc.querySelector('header');
+                        if (newHeader) appWrapper.appendChild(newHeader.cloneNode(true));
+                        
+                        const newFilters = doc.querySelector('.filters');
+                        if (newFilters) appWrapper.appendChild(newFilters.cloneNode(true));
+
+                        const newGrid = doc.querySelector('.gallery-grid');
+                        if (newGrid) appWrapper.appendChild(newGrid.cloneNode(true));
+
+                        const newZippoGate = doc.querySelector('#zippo-gate');
+                        if (newZippoGate) appWrapper.appendChild(newZippoGate.cloneNode(true));
+
+                        const newClipperSec = doc.querySelector('#clipper-section');
+                        if (newClipperSec) appWrapper.appendChild(newClipperSec.cloneNode(true));
+
+                        const newZippoSec = doc.querySelector('#zippo-section');
+                        if (newZippoSec) appWrapper.appendChild(newZippoSec.cloneNode(true));
+
+                        const newAudioCont = doc.querySelector('.audio-container');
+                        if (newAudioCont) appWrapper.appendChild(newAudioCont.cloneNode(true));
+
+                        const newCollage = doc.querySelector('.collage-container');
+                        if (newCollage) appWrapper.appendChild(newCollage.cloneNode(true));
+
+                        const newBrand = doc.querySelector('.brand');
+                        if (newBrand && !doc.querySelector('header')) appWrapper.insertBefore(newBrand.cloneNode(true), appWrapper.firstChild);
+
+                        const newFooterLeft = doc.querySelector('#footer-left-text') || doc.querySelector('.footer-left');
+                        if (newFooterLeft) {
+                            document.querySelector('.footer-left').innerText = newFooterLeft.innerText;
+                        }
+
+                        document.title = doc.title;
+                        history.pushState(null, doc.title, url);
+                        
+                        attachNavEvents();
+                        
+                        if (typeof initCustomAudioPlayers === 'function') initCustomAudioPlayers();
+                    }
+                })
+                .catch(err => {
+                    window.location.href = url;
+                });
+        }
+
+        window.onpopstate = function() {
+            loadPage(location.pathname);
+        };
+
+        attachNavEvents();
+
+        /* GLITCH / MATRIX NÉZET TOGGLE */
+        function toggleGlitch() {
+            document.body.classList.toggle('glitch-mode');
+        }
+
+        window.addEventListener('keydown', function(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleGlitch();
+            }
+        });
+    </script>
 </body>
 </html>

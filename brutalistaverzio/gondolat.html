@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aedoner // gondola(t) - dynamic book</title>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        body {
+            background-color: #edebe6;
+            color: #1a1a1a;
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 4px solid #1a1a1a;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .back-link {
+            color: #1a1a1a;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            font-weight: 900;
+        }
+
+        .book-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            margin: auto;
+            align-items: start;
+        }
+
+        @media (min-width: 900px) {
+            .book-layout {
+                grid-template-columns: 1fr 2.5fr;
+            }
+        }
+
+        /* BAL OLDAL: KUBISTA PANEL */
+        .book-sidebar {
+            background-color: #e5b869;
+            border: 3px solid #1a1a1a;
+            padding: 40px 30px;
+            clip-path: polygon(0% 0%, 100% 4%, 92% 100%, 0% 96%);
+            box-shadow: 12px 12px 0px #1a1a1a;
+        }
+
+        .sidebar-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            opacity: 0.7;
+        }
+
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: none;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: 6px 0;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            transform: translateX(5px);
+        }
+
+        .filter-btn.active::before {
+            content: "■ ";
+            color: #1a1a1a;
+        }
+
+        /* JOBB OLDAL: KÖNYVLAP (Görgethető belső tartalommal) */
+        .book-page {
+            background-color: #faf9f5;
+            border: 1px solid #dcdad4;
+            border-left: 6px double #1a1a1a;
+            padding: 50px 60px;
+            box-shadow: 15px 15px 0px rgba(26,26,26,0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            max-height: 65vh; /* Fix magasság a könyvlapnak, hogy görgethető legyen */
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        /* BEJEGYZÉSEK ALAPSTÍLUSA */
+        .text-entry {
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .text-entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry-meta {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #777;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .entry-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        /* Hosszabb írások interaktív címei */
+        .clickable-title {
+            cursor: pointer;
+            display: inline-block;
+        }
+        .clickable-title:hover {
+            text-decoration: underline;
+            color: #e5b869;
+        }
+
+        /* Szövegtörzs */
+        .entry-body {
+            font-family: Georgia, serif;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #222;
+        }
+
+        /* Összecsukható és görgethető doboz a hosszabb írásoknak */
+        .collapsible-body {
+            max-height: 0;
+            opacity: 0;
+            overflow-y: auto;
+            transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s;
+            padding-right: 15px;
+        }
+
+        /* Amikor nyitva van az írás */
+        .text-entry.open .collapsible-body {
+            max-height: 250px; /* Ebben a dobozban fog görgetni a hosszú szöveg */
+            opacity: 1;
+            margin-top: 20px;
+            border-left: 2px solid #1a1a1a;
+            padding-left: 20px;
+        }
+
+        /* Haiku egyedi formázása (mindig nyitva) */
+        .haiku-format {
+            font-style: italic;
+            border-left: 3px solid #e5b869;
+            padding-left: 20px;
+            margin-top: 15px;
+        }
+
+        .haiku-line {
+            display: block;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 60px 0;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: #888;
+            display: none;
+        }
+
+        footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-top: 2px solid #1a1a1a;
+            padding-top: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="back-link">← [ vissza ]</a>
+        <h1>03 // Gondola(t)</h1>
+    </header>
+
+    <div class="book-layout">
+        
+        <!-- BAL SIDEBAR -->
+        <aside class="book-sidebar">
+            <div class="sidebar-title">// Index</div>
+            <nav class="filters">
+                <button class="filter-btn active" onclick="filterBook('all', this)">[ 00 // Mind ]</button>
+                <button class="filter-btn" onclick="filterBook('haiku', this)">[ 01 // Haiku ]</button>
+                <button class="filter-btn" onclick="filterBook('vers', this)">[ 02 // Versek ]</button>
+                <button class="filter-btn" onclick="filterBook('irasok', this)">[ 03 // Írások ]</button>
+            </nav>
+        </aside>
+
+        <!-- JOBB KÖNYVLAP -->
+        <main class="book-page">
+            
+            <!-- Haiku 1 (Azonnal látható, teljes terjedelem) -->
+            <article class="text-entry" data-type="haiku">
+                <div class="entry-meta">Haiku // 2026.07.11.</div>
+                <h2 class="entry-title">A feszültség geometriája</h2>
+                <div class="entry-body haiku-format">
+                    <span class="haiku-line">Néma szilánkok,</span>
+                    <span class="haiku-line">zajból szőtt dallamsorok,</span>
+                    <span class="haiku-line">a sötétben állsz.</span>
+                </div>
+            </article>
+
+            <!-- Haiku 2 (Azonnal látható, teljes terjedelem) -->
+            <article class="text-entry" data-type="haiku">
+                <div class="entry-meta">Haiku // 2026.07.11.</div>
+                <h2 class="entry-title">A múló jelenlét</h2>
+                <div class="entry-body haiku-format">
+                    <span class="haiku-line">Vászonra vetett</span>
+                    <span class="haiku-line">gondolatok sora ez,</span>
+                    <span class="haiku-line">megy az idő, fuss.</span>
+                </div>
+            </article>
+
+            <!-- Példa egy hosszabb ÍRÁSRA (Csak a cím látszik, kattintásra nyílik és belsőleg görgethető) -->
+            <article class="text-entry" data-type="irasok">
+                <div class="entry-meta">Írások // 2026.07.11.</div>
+                <h2 class="entry-title clickable-title" onclick="toggleEntry(this.parentElement)">A dekonstrukció szükségességéről ↓</h2>
+                <div class="entry-body collapsible-body">
+                    Ez egy mintaszöveg a jövőbeli közéleti és kritikai publicisztikáidnak. Amikor rákattintasz a fenti címre, ez a doboz simán kinyílik. Ha a szöveged nagyon hosszúra nyúlik, a doboz nem tolja el az egész oldalt a fenébe, hanem ezen a belső sávon belül válik tisztán görgethetővé, miközben a könyvlap struktúrája érintetlen marad. Így kényelmesen olvasható bármilyen esszé vagy kritika anélkül, hogy elrontaná a minimalista és fegyelmezett kubista összképet.
+                </div>
+            </article>
+
+            <!-- Üres állapot üzenet -->
+            <div id="book-empty" class="empty-message">
+                // A fejezet még formálódik.
+            </div>
+
+        </main>
+
+    </div>
+
+    <footer>
+        <div class="footer-left">aedoner.hu // Jasper megy az idő.</div>
+        <div class="footer-right" id="timer">Jelenlét: 0 másodperc</div>
+    </footer>
+
+    <script>
+        // Jelenlétszámláló
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
+        }, 1000);
+
+        // Hosszú szövegek lenyitása és becsukása
+        function toggleEntry(entryElement) {
+            entryElement.classList.toggle('open');
+        }
+
+        // Könyvlap szűrő mechanizmus
+        function filterBook(type, button) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            let visibleCount = 0;
+            const entries = document.querySelectorAll('.text-entry');
+            const emptyNotice = document.getElementById('book-empty');
+
+            entries.forEach(entry => {
+                if (type === 'all' || entry.getAttribute('data-type') === type) {
+                    entry.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    entry.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                emptyNotice.style.display = 'block';
+            } else {
+                emptyNotice.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
