@@ -589,13 +589,13 @@
 
                 zItem.innerHTML = `
                     <div class="zippo-img-holder">
-                        <img src="zippo_${id}.png" alt="Zippo #${id}" loading="lazy" decoding="async">
+                        <img src="zippo_${id}.PNG" alt="Zippo #${id}" loading="lazy" decoding="async">
                     </div>
                     <div class="zippo-label">#z_${id}</div>
                 `;
                 
                 zItem.addEventListener('click', () => {
-                    modalImg.src = `zippo_${id}o.png`;
+                    modalImg.src = `zippo_${id}o.PNG`;
                     modal.classList.add('active');
                 });
                 targetShelf.appendChild(zItem);
