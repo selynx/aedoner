@@ -11,6 +11,12 @@
             padding: 0; 
         }
 
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
         body {
             background-color: #f1f0ec;
             color: #1a1a1a;
@@ -55,7 +61,6 @@
             border-color: #00ff66 !important;
         }
 
-        /* ZAJSZŰRŐ */
         body::after {
             content: "";
             position: fixed;
@@ -119,7 +124,7 @@
             border-color: #d96b52;
         }
 
-        /* MASONRY ELRENDEZÉS */
+        /* BRUTALISTA MASONRY RÁCS */
         .gallery-grid {
             column-count: 3;
             column-gap: 25px;
@@ -214,7 +219,7 @@
             font-weight: bold;
         }
 
-        /* NAGYÍTHATÓ POP-UP MODAL */
+        /* NAGYÍTÓ POP-UP MODAL */
         .image-modal {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -619,7 +624,7 @@
         </div>
     </div>
 
-    <!-- NAGYÍTHATÓ POP-UP MODAL -->
+    <!-- NAGYÍTÓ POP-UP MODAL -->
     <div class="image-modal" id="photoModal">
         <button class="close-modal-btn" onclick="closePhoto()">X [ BEZÁR ]</button>
         <div class="modal-content-wrapper">
@@ -648,23 +653,18 @@
     <script>
         /* FOLYAMATOS JELENLÉT MÉRŐ */
         let seconds = sessionStorage.getItem('aedoner_presence');
-        if (seconds === null) {
-            seconds = 0;
-        } else {
-            seconds = parseInt(seconds, 10);
-        }
+        seconds = seconds === null ? 0 : parseInt(seconds, 10);
 
         setInterval(() => {
             seconds++;
             sessionStorage.setItem('aedoner_presence', seconds);
             const timerEl = document.getElementById('timer');
-            if (timerEl) {
-                timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
-            }
+            if (timerEl) timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
         }, 1000);
 
         document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
 
+        /* SZŰRŐ MOTOR */
         function filterGallery(category, button) {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
@@ -678,6 +678,7 @@
             });
         }
 
+        /* NAGYÍTÓ MODAL MOTOR */
         const photoModal = document.getElementById('photoModal');
         const modalImg = document.getElementById('modalImg');
         const modalTitle = document.getElementById('modalTitle');
@@ -740,21 +741,19 @@
         });
 
         photoModal.addEventListener('click', function(e) {
-            if (e.target === photoModal) {
-                closePhoto();
-            }
+            if (e.target === photoModal) closePhoto();
         });
 
-        /* KAZETTÁS MAGNÓ RANDOM ENGINE */
+        /* KAZETTÁS MAGNÓ ENGINE */
         const audio = document.getElementById('audioEngine');
         const playBtn = document.getElementById('playBtn');
         const trackNameEl = document.getElementById('trackName');
 
         const playlist = [
             { title: "hegyek.mp3", src: "Dallamok/hegyek.mp3" },
-            { title: "A_babam_fekete_romalany.wav", src: "Dallamok/A_babam_fekete_romalany.wav" },
+            { title: "A_babam_fekete_romalany.mp3", src: "Dallamok/A_babam_fekete_romalany.mp3" },
             { title: "littlepaul.wav", src: "Dallamok/littlepaul.wav" },
-            { title: "makaralexneknagya.wav", src: "Dallamok/makaralexneknagya.wav" }
+            { title: "makaralexneknagya.mp3", src: "Dallamok/makaralexneknagya.mp3" }
         ];
 
         function toggleAudio() {
@@ -765,7 +764,6 @@
                     audio.src = randomTrack.src;
                     if (trackNameEl) trackNameEl.innerText = randomTrack.title;
                 }
-                
                 audio.play();
                 playBtn.innerText = '[ ❚❚ PAUSE ]';
             } else {
@@ -774,6 +772,7 @@
             }
         }
 
+        /* GLITCH ÉS GYORSBILLENTYŰK */
         function toggleGlitch() {
             document.body.classList.toggle('glitch-mode');
         }
