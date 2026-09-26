@@ -12,6 +12,12 @@
             padding: 0; 
         }
 
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
         body {
             background-color: #f1f0ec;
             color: #1a1a1a;
@@ -20,7 +26,6 @@
             padding: 40px;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
             transition: background-color 0.15s ease, filter 0.15s ease;
         }
 
@@ -255,11 +260,12 @@
 
         .zippo-shelf {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 30px;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 25px;
             padding-bottom: 30px;
             position: relative;
             align-items: flex-end;
+            width: 100%;
         }
 
         #shelf-1 { border-bottom: 8px solid #4a6b82; clip-path: polygon(0 0, 100% 1.5%, 100% 100%, 0 100%); }
@@ -280,10 +286,12 @@
             height: 190px;
             filter: drop-shadow(6px 10px 0px rgba(26, 26, 26, 0.15));
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), filter 0.3s;
+            width: 100%;
         }
 
         .zippo-img-holder {
-            width: 105px;
+            width: 100%;
+            max-width: 105px;
             aspect-ratio: 1 / 1.5;
             display: flex;
             justify-content: center;
@@ -412,6 +420,88 @@
 
         .cassette-btn:hover {
             color: #d96b52;
+        }
+
+        /* ====================================================
+           MOBIL TELEFONRA OPTIMALIZÁLT NÉZET (RESPONSIVE)
+           ==================================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 18px 14px;
+            }
+
+            header {
+                margin-bottom: 25px;
+                padding-bottom: 12px;
+                border-bottom: 3px solid #1a1a1a;
+                align-items: center;
+            }
+
+            .back-link {
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            h1 {
+                font-size: 1.25rem;
+                letter-spacing: -1px;
+                text-align: right;
+            }
+
+            .clipper-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+                gap: 25px 12px;
+                padding: 10px 0;
+            }
+
+            .clipper-image-holder {
+                height: 170px;
+            }
+
+            .zippo-cabinet {
+                gap: 45px;
+                padding: 10px 0;
+                margin: 15px auto;
+            }
+
+            .zippo-shelf {
+                gap: 6px;
+                padding-bottom: 15px;
+                clip-path: none !important;
+                transform: none !important;
+            }
+
+            #shelf-1 { border-bottom: 5px solid #4a6b82; }
+            #shelf-2 { border-bottom: 5px solid #d96b52; }
+            #shelf-3 { border-bottom: 5px solid #e5b869; }
+
+            .zippo-shelf::after {
+                bottom: -9px;
+                height: 4px;
+            }
+
+            .zippo-item {
+                height: auto;
+                min-height: 105px;
+            }
+
+            .zippo-img-holder {
+                max-width: 60px;
+            }
+
+            .zippo-label {
+                font-size: 0.55rem;
+                margin-top: 5px;
+                letter-spacing: 0;
+            }
+
+            footer {
+                font-size: 0.7rem;
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+                padding-top: 15px;
+            }
         }
     </style>
 </head>
@@ -575,7 +665,7 @@
             }
         }
 
-        // ZIPPO POLCOK
+        // ZIPPO POLCOK (5 elem soronként - reszponzív)
         for(let i = 1; i <= 15; i++) {
             let id = i < 10 ? "0" + i : i;
             let targetShelf = i <= 5 ? document.getElementById('shelf-1') : (i <= 10 ? document.getElementById('shelf-2') : document.getElementById('shelf-3'));
