@@ -312,7 +312,7 @@
         }
         .zippo-item:hover .zippo-label { opacity: 1; color: #d96b52; }
 
-        /* KISEBB, KOMPAKT ÉS KÖZÉPRE IGAZÍTOTT MODAL CSOMAG */
+        /* MODAL */
         .clipper-modal {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -375,11 +375,21 @@
 
         /* LÁBLÉC ÉS KAZETTÁS LEJÁTSZÓ */
         footer {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.8rem; text-transform: uppercase; font-weight: bold;
-            border-top: 2px solid #1a1a1a; padding-top: 15px; margin-top: auto;
-            max-width: 1600px; margin-left: auto; margin-right: auto;
-            gap: 15px; flex-wrap: wrap;
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            font-size: 0.8rem; 
+            text-transform: uppercase; 
+            font-weight: bold;
+            border-top: 2px solid #1a1a1a; 
+            padding-top: 15px; 
+            margin-top: auto;
+            max-width: 1600px; 
+            margin-left: auto; 
+            margin-right: auto;
+            gap: 15px; 
+            flex-wrap: wrap;
         }
 
         .cassette-player {
@@ -438,7 +448,7 @@
         </div>
     </div>
 
-    <!-- MODÁLIS PANEL (CSAK KÉP) -->
+    <!-- MODÁLIS PANEL -->
     <div class="clipper-modal" id="info-modal">
         <div class="modal-card">
             <button class="close-modal" id="close-btn">X [ BEZÁR ]</button>
@@ -453,7 +463,6 @@
             // Nem dohányzom...
         </div>
 
-        <!-- STICKY KAZETTÁS LEJÁTSZÓ -->
         <div class="cassette-player">
             <button class="cassette-btn" id="playBtn" onclick="toggleAudio()">[ ▶ PLAY ]</button>
             <span id="trackName" style="font-size:0.7rem;">[ Random song ]</span>
@@ -553,7 +562,7 @@
 
                 card.innerHTML = `
                     <div class="clipper-image-holder">
-                        <img src="${itemImg}" alt="Clipper #${currentId}">
+                        <img src="${itemImg}" alt="Clipper #${currentId}" loading="lazy" decoding="async">
                     </div>
                     <div class="clipper-label">#${currentId}</div>
                 `;
@@ -580,13 +589,13 @@
 
                 zItem.innerHTML = `
                     <div class="zippo-img-holder">
-                        <img src="zippo_${id}.PNG" alt="Zippo #${id}">
+                        <img src="zippo_${id}.png" alt="Zippo #${id}" loading="lazy" decoding="async">
                     </div>
                     <div class="zippo-label">#z_${id}</div>
                 `;
                 
                 zItem.addEventListener('click', () => {
-                    modalImg.src = `zippo_${id}o.PNG`;
+                    modalImg.src = `zippo_${id}o.png`;
                     modal.classList.add('active');
                 });
                 targetShelf.appendChild(zItem);
@@ -595,19 +604,13 @@
 
         /* FOLYAMATOS JELENLÉT MÉRŐ */
         let seconds = sessionStorage.getItem('aedoner_presence');
-        if (seconds === null) {
-            seconds = 0;
-        } else {
-            seconds = parseInt(seconds, 10);
-        }
+        seconds = seconds === null ? 0 : parseInt(seconds, 10);
 
         setInterval(() => {
             seconds++;
             sessionStorage.setItem('aedoner_presence', seconds);
             const timerEl = document.getElementById('timer');
-            if (timerEl) {
-                timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
-            }
+            if (timerEl) timerEl.innerText = "Jelenlét: " + seconds + " másodperc";
         }, 1000);
 
         document.getElementById('timer').innerText = "Jelenlét: " + seconds + " másodperc";
@@ -674,9 +677,9 @@
 
         const playlist = [
             { title: "hegyek.mp3", src: "Dallamok/hegyek.mp3" },
-            { title: "A_babam_fekete_romalany.wav", src: "Dallamok/A_babam_fekete_romalany.wav" },
+            { title: "A_babam_fekete_romalany.mp3", src: "Dallamok/A_babam_fekete_romalany.mp3" },
             { title: "littlepaul.wav", src: "Dallamok/littlepaul.wav" },
-            { title: "makaralexneknagya.wav", src: "Dallamok/makaralexneknagya.wav" }
+            { title: "makaralexneknagya.mp3", src: "Dallamok/makaralexneknagya.mp3" }
         ];
 
         function toggleAudio() {
