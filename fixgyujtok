@@ -1,0 +1,122 @@
+"""Aedoner // Gyujtok javitas.
+Hasznalat: tedd ebbe a mappaba, ahol a clipper.html es a PNG kepek vannak, majd:
+    pip install pillow
+    python fix_gyujtok.py
+1) clipper.html.bak mentes + a javitasok beirasa a clipper.html-be
+2) a PNG-kbol kis (thumbs/) es nagy (full/) WebP kepek keszulnek.
+Az eredeti PNG-ket nem bantja."""
+import os
+import shutil
+
+HTML = "clipper.html"
+
+CSS = r'''
+        /* === JAVITASOK: zippo meret, telefon, teljesitmeny === */
+        body { touch-action: manipulation; }
+        .clipper-item, .zippo-item { -webkit-tap-highlight-color: transparent; }
+        .zippo-item { height: auto; min-height: 250px; }
+        .zippo-img-holder { max-width: 150px; }
+        .clipper-modal { height: 100vh; height: 100dvh; }
+        .modal-card { height: 70vh; height: 70dvh; }
+        .close-modal { padding: 12px 16px; }
+        @media (max-width: 768px) {
+            .zippo-shelf { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px 10px; }
+            .zippo-item { min-height: 150px; }
+            .zippo-img-holder { max-width: 92px; }
+            .zippo-label { font-size: 0.65rem; margin-top: 8px; }
+            .clipper-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+        }
+    </style>'''
+
+JS = r'''document.documentElement.classList.toggle('can-hover', window.matchMedia('(hover: hover)').matches);
+        const thumb = f => /^https?:/.test(f) ? f : 'thumbs/' + f.replace(/\.png$/i, '.webp');
+        const full = f => /^https?:/.test(f) ? f : 'full/' + f.replace(/\.png$/i, '.webp');
+        function openModalImg(file) {
+            const m = document.getElementById('modal-img');
+            m.onerror = () => { m.onerror = null; m.src = file; };
+            m.src = full(file);
+        }
+        document.addEventListener('error', e => {
+            const i = e.target;
+            if (i.tagName === 'IMG' && i.dataset.orig && !i.dataset.fb) { i.dataset.fb = '1'; i.src = i.dataset.orig; }
+        }, true);
+        const clipperGrid = document.getElementById('clipper-grid-container');'''
+
+EDITS = [
+    # polcok: a clip-path levagta a hover-nagyitast es az arnyekot
+    (" clip-path: polygon(0 0, 100% 1.5%, 100% 100%, 0 100%);", "", 1),
+    (" clip-path: polygon(0 1.5%, 100% 0%, 100% 100%, 0 100%);", "", 1),
+    (" clip-path: polygon(0 0, 100% 1%, 100% 100%, 0 100%);", "", 1),
+    # nincs filter-animacio (gorditest okoz gepen)
+    ("transition: filter 0.3s, transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);",
+     "transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);", 1),
+    ("transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), filter 0.3s;",
+     "transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1);", 1),
+    # hover csak egerrel (telefonon ne ragadjon be)
+    (".clipper-item:hover", ".can-hover .clipper-item:hover", 2),
+    (".zippo-item:hover", ".can-hover .zippo-item:hover", 2),
+    # kis kepek a racsban, nagy a nagyitasban (hiba eseten visszaesik a PNG-re)
+    ("const clipperGrid = document.getElementById('clipper-grid-container');", JS, 1),
+    ('src="${itemImg}"', 'src="${thumb(itemImg)}" data-orig="${itemImg}"', 1),
+    ("modalImg.src = itemImg;", "openModalImg(itemImg);", 1),
+    ('<img src="zippo_${id}.PNG"',
+     "<img src=\"${thumb('zippo_' + id + '.PNG')}\" data-orig=\"zippo_${id}.PNG\"", 1),
+    ("modalImg.src = `zippo_${id}o.PNG`;", "openModalImg(`zippo_${id}o.PNG`);", 1),
+    ("</style>", CSS, 1),
+]
+
+
+def patch():
+    if not os.path.exists(HTML):
+        print("Nem talalom a clipper.html-t ebben a mappaban.")
+        return
+    with open(HTML, encoding="utf-8", newline="") as f:
+        html = f.read()
+    if "openModalImg" in html:
+        print("A clipper.html mar javitva van.")
+        return
+    for old, _, n in EDITS:
+        if html.count(old) != n:
+            print("Nem talalom pontosan ezt a reszt, ezert semmit nem modositottam:")
+            print("  " + old[:70])
+            return
+    for old, new, _ in EDITS:
+        html = html.replace(old, new)
+    shutil.copy(HTML, HTML + ".bak")
+    with open(HTML, "w", encoding="utf-8", newline="") as f:
+        f.write(html)
+    print("clipper.html javitva (mentes: clipper.html.bak)")
+
+
+def images():
+    try:
+        from PIL import Image
+    except ImportError:
+        print("Kepek: telepitsd a Pillow-t (pip install pillow), aztan futtasd ujra.")
+        return
+    os.makedirs("thumbs", exist_ok=True)
+    os.makedirs("full", exist_ok=True)
+    done = 0
+    for name in sorted(os.listdir(".")):
+        stem, ext = os.path.splitext(name)
+        if ext.lower() != ".png":
+            continue
+        t, f = f"thumbs/{stem}.webp", f"full/{stem}.webp"
+        if os.path.exists(t) and os.path.exists(f):
+            continue
+        img = Image.open(name)
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA")
+        big = img.copy()
+        big.thumbnail((1400, 1400), Image.LANCZOS)
+        big.save(f, "WEBP", quality=85, method=6)
+        small = img.copy()
+        small.thumbnail((10000, 480), Image.LANCZOS)
+        small.save(t, "WEBP", quality=80, method=6)
+        done += 1
+    print(f"Kepek: {done} uj WebP par kesz (thumbs/ es full/ mappa)")
+
+
+if __name__ == "__main__":
+    patch()
+    images()
